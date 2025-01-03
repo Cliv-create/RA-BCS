@@ -64,6 +64,8 @@ namespace RA_BCS
 
             using var cts = new CancellationTokenSource();
 
+            // TODO: If implementing multiple async tasks move to this approach:
+            // https://learn.microsoft.com/ru-ru/dotnet/standard/parallel-programming/how-to-cancel-a-task-and-its-children
             var receivingTask = Task.Run(() =>
                 _botClient.StartReceiving(
                     UpdateHandler,
