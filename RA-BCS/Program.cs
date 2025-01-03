@@ -64,19 +64,71 @@ namespace RA_BCS
 
             using var cts = new CancellationTokenSource();
 
-            _botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token); // Launching bot
+            var receivingTask = Task.Run(() =>
+                _botClient.StartReceiving(
+                    UpdateHandler,
+                    ErrorHandler,
+                    _receiverOptions,
+                    cts.Token
+                ),
+                cts.Token
+            );
+
+            // _botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token); // Launching bot
 
             var me = await _botClient.GetMe();
             Console.WriteLine($"{me.FirstName} запущен!");
 
-            await Task.Delay(-1); // Infinite delay, so that the bot is always up.
+            Console.WriteLine("Enter \"c\" or \"C\" to exit...");
+            char ch = Console.ReadKey().KeyChar;
+            if (ch == 'c' || ch == 'C')
+            {
+                cts.Cancel();
+                Console.WriteLine("\nMain: Task cancellation requested.");
+            }
+
+            try
+            {
+                await receivingTask;
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine($"\nMain: {nameof(OperationCanceledException)} thrown\n");
+            }
+            finally
+            {
+                cts.Dispose();
+            }
+
+            // Commented-out because CancellationToken was implemented. For removal.
+            // await Task.Delay(-1); // Infinite delay, so that the bot is always up.
         }
+
+        /*
+        public static async Task<bool> SendTextMessage()
+        {
+            await botClient.SendMessage(
+                chat.Id,
+                text:   "Привет!\n" +
+                        "Это проект RA-BCS для удалённого управления компьютером.",
+                protectContent: true,
+                replyParameters: message.MessageId
+            );
+            return false;
+        }
+        */
 
         private static async Task UpdateHandler(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             // Обязательно ставим блок try-catch, чтобы наш бот не "падал" в случае каких-либо ошибок
             try
             {
+                // CancellationToken check (Check https://learn.microsoft.com/ru-ru/dotnet/standard/parallel-programming/how-to-cancel-a-task-and-its-children for additional information)
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    Console.WriteLine("Task {0} was cancelled before it got started.", Task.CurrentId);
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
                 // Сразу же ставим конструкцию switch, чтобы обрабатывать приходящие Update
                 switch (update.Type)
                 {
@@ -94,7 +146,7 @@ namespace RA_BCS
                             case MessageType.Text:
                             {
                                 #region Reply-keyboard IF level
-                                if (message.Text == "Привет!")
+                                if (message.Text == "Привет! Ты кто?")
                                 {
                                     await botClient.SendMessage(
                                         chat.Id,
@@ -139,7 +191,6 @@ namespace RA_BCS
                                         protectContent: true,
                                         replyParameters: message.MessageId
                                     );
-                                    System.Environment.Exit(0);
                                     // return;
                                 }
                                 #endregion
@@ -336,6 +387,13 @@ namespace RA_BCS
                     #endregion
                 // switch(update.Type) level
                 }
+            }
+            catch (OperationCanceledException ocex)
+            {
+                Console.WriteLine("\nOperation was canceled");
+                Console.WriteLine($"Application/Object that caused: {ocex.Source}\nDescription: {ocex.Message}\nInstance that caused exception: {ocex.InnerException}\nHRESULT:{ocex.HResult}\nex string: {ocex.ToString}");
+                // returning from method automatically (cancellation was requested)
+                
             }
             catch (Exception ex)
             {
