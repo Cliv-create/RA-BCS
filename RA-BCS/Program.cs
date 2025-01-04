@@ -1,4 +1,5 @@
-﻿using System.Transactions;
+﻿using System.Diagnostics;
+using System.Transactions;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
@@ -34,11 +35,10 @@ namespace RA_BCS
         // TODO: Rename Program into TelegramBotServer
         // TODO: Rename Main function into Start
         // TODO: Move renamed class into it's own file
-        // TODO: Get TOKEN from a file.
+        // TODO: Get TOKEN from a file. - DONE
         // TODO: ALLOWEDID class for ALLOWED_ID array.
         private static ITelegramBotClient _botClient;
         private static ReceiverOptions _receiverOptions;
-        private static readonly string bot_token = "7268449878:AAEkKBAabLJc2XavP0xDIACs0zgbb1Uj5tg";
 
         static async Task Main(string[] args)
         {
@@ -47,10 +47,41 @@ namespace RA_BCS
              * "Utilities" in this case - YT-DLP. You can find this project at: https://github.com/yt-dlp/yt-dlp
              * Objective: Launch YT-DLP at specified path with predefined options and URL that was provided throught API messages.
              * Additional objectives (probability of implementation is low): List files from specified folder, and move them to another folder (by specifying files to move as numbers)
-             * Started off this guide: https://habr.com/ru/articles/756814/
+             * Started from this guide: https://habr.com/ru/articles/756814/
             */
             Console.WriteLine("Starting up!");
-            _botClient = new TelegramBotClient(bot_token);
+            // Token retreival
+            string token = "";
+            try
+            {
+                if (!System.IO.File.Exists("secret.txt"))
+                {
+                    Console.WriteLine("secret.txt not found!");
+                    System.IO.File.Create("secret.txt").Dispose(); // if file doesn't exist - create new secret.txt file and immediatly close FileStream (otherwise file will be left open)
+                    throw new Exception("File not found. Created an empty file.");
+                    // return;
+                }
+                // TODO: Change this for settings.json later
+                token = Convert.ToString(System.IO.File.ReadAllText("secret.txt")); // If file exists - grab all lines (secret.txt should have 1 line only (token))
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.WriteLine("File not found!\n" + ex.ToString());
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                Console.WriteLine("Directory not found!\n" + ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            if (token == "" || token == null)
+            {
+                Console.WriteLine("Empty or null token detected!\nExiting...");
+                System.Environment.ExitCode = -1;
+            }
+            _botClient = new TelegramBotClient(token);
             _receiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = new[] // Тут указываем типы получаемых Update`ов, о них подробнее расказано тут https://core.telegram.org/bots/api#update
@@ -79,7 +110,7 @@ namespace RA_BCS
             // _botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token); // Launching bot
 
             var me = await _botClient.GetMe();
-            Console.WriteLine($"{me.FirstName} запущен!");
+            Console.WriteLine($"{me.FirstName} launched!");
 
             Console.WriteLine("Enter \"c\" or \"C\" to exit...");
             char ch = Console.ReadKey().KeyChar;
