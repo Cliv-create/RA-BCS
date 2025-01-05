@@ -10,6 +10,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using static Telegram.Bot.TelegramBotClient;
+using System.Text.RegularExpressions;
 
 namespace RA_BCS
 {
@@ -33,7 +34,7 @@ namespace RA_BCS
     }
     */
 
-    internal class CSTelegramBot
+    internal partial class CSTelegramBot
     {
         // TODO: Rename Program into TelegramBotServer / CSTelegramBot
         // TODO: Rename Main function into Start
@@ -42,6 +43,18 @@ namespace RA_BCS
         // TODO: ALLOWEDID class for ALLOWED_ID array.
         private static ITelegramBotClient _botClient;
         private static ReceiverOptions _receiverOptions;
+
+        // Match YoutubeID pattern
+        // Link to the pattern: https://regex101.com/library/OY96XI
+        // WARNING: Don't forger to switch FLAVOR setting to .NET 7.0 (C#) in order to debug and test pattern
+        // YoutubeIDPattern
+        [GeneratedRegex(@"(?:https?:)?(?:\/\/)?(?:[0-9A-Z-]+\.)?(?:youtu\.be\/|youtube(?:-nocookie)?\.com\S*?[^\w\s-])([\w-]{11})(?=[^\w-]|$)(?![?=&+%\w.-]*(?:['""][^<>]*>|<\/a>))[?=&+%\w.-]*", RegexOptions.IgnoreCase, "en-US")]
+        private static partial Regex YoutubeVideoIDRegex();
+        
+        // Return match after /link command
+        // (?<=\/link ).*
+        [GeneratedRegex(@"(?<=\/link ).*", RegexOptions.IgnoreCase, "en-US")]
+        private static partial Regex MatchAfterLinkCommand();
 
         public async Task Main(string[] args = null)
         {
@@ -100,6 +113,8 @@ namespace RA_BCS
                 DropPendingUpdates = true,
             };
 
+            // TODO: Change CancellationToken handler to Task.Delay(-1, cancellationToken: cts.Token.)
+            // Link for the change: https://habr.com/ru/articles/657583/comments/#comment_24205299
             using var cts = new CancellationTokenSource();
 
             // TODO: If implementing multiple async tasks move to this approach:
@@ -185,6 +200,90 @@ namespace RA_BCS
                                 #region Text MessageType
                                 case MessageType.Text:
                                     {
+                                        // MatchAfterLinkCommand
+                                        // if (YoutubeVideoIDRegex().IsMatch(message.Text))
+                                        // Link check
+                                        if (MatchAfterLinkCommand().IsMatch(message.Text))
+                                        {
+                                            if (YoutubeVideoIDRegex().IsMatch(message.Text))
+                                            {
+                                                var sentMessage = await botClient.SendMessage(
+                                                    // TODO: Delete
+                                                    // chatId: message.Chat.Id,
+                                                    chat.Id,
+                                                    text:   "Starting download...",
+                                                    protectContent: true,
+                                                    replyParameters: message.MessageId
+                                                );
+
+                                                YTDLP ytdlp = new YTDLP();
+
+                                                var progress = new Progress<string>(async (output) =>
+                                                {
+                                                    // Updating message
+                                                    await botClient.EditMessageText(
+                                                        chatId: sentMessage.Chat.Id,
+                                                        messageId: sentMessage.MessageId,
+                                                        text:   $"Download progress:\n{output}"
+                                                    );
+                                                });
+
+                                                await ytdlp.StartDownloadAsync(YoutubeVideoIDRegex().Match(message.Text).ToString(), progress);
+
+                                                await botClient.SendMessage(
+                                                    chat.Id,
+                                                    text:   "Download completed.",
+                                                    protectContent: true,
+                                                    replyParameters: message.MessageId
+                                                );
+                                            }
+                                            else
+                                            {
+                                               await botClient.SendMessage(
+                                                chat.Id,
+                                                text:   "Link not found. Returning...",
+                                                protectContent: true,
+                                                replyParameters: message.MessageId
+                                                ); 
+                                            }
+                                            
+
+                                            return;
+
+                                            /* Unused
+                                            var sentMessage = await botClient.SendMessage(
+                                                // TODO: Delete
+                                                // chatId: message.Chat.Id,
+                                                chat.Id,
+                                                text:   "Starting download...",
+                                                protectContent: true,
+                                                replyParameters: message.MessageId
+                                            );
+
+                                            YTDLP ytdlp = new YTDLP();
+
+                                            var progress = new Progress<string>(async (output) =>
+                                            {
+                                                // Updating message
+                                                await botClient.EditMessageText(
+                                                    chatId: sentMessage.Chat.Id,
+                                                    messageId: sentMessage.MessageId,
+                                                    text:   $"Download progress:\n{output}"
+                                                );
+                                            });
+
+                                            await ytdlp.StartDownloadAsync("video_url", progress);
+
+                                            await botClient.SendMessage(
+                                                chat.Id,
+                                                text:   "Download completed.",
+                                                protectContent: true,
+                                                replyParameters: message.MessageId
+                                            );
+                                            */
+                                        }
+                                        
+
                                         #region Reply-keyboard IF level
                                         if (message.Text == "Привет! Ты кто?")
                                         {

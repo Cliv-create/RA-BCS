@@ -5,6 +5,7 @@
 
 # Manually-added files
 secret.txt
+yt_dlp_path.txt
 
 # User-specific files
 *.rsuser
