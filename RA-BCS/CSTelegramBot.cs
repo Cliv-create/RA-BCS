@@ -11,6 +11,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using static Telegram.Bot.TelegramBotClient;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Builder;
 
 namespace RA_BCS
 {
@@ -216,19 +217,38 @@ namespace RA_BCS
                                                     replyParameters: message.MessageId
                                                 );
 
-                                                YTDLP ytdlp = new YTDLP();
+                                                YTDLP ytdlp = new YTDLP(); // YTDLP instance for download.
 
+                                                // StringBuilder cumulative_output = new StringBuilder();
+                                                // Commented-out, because generates following error:
+                                                // System.ArgumentOutOfRangeException: Index was out of range.
+                                                // Must be non-negative and less than or equal to the size of the collection.
+                                                // (Parameter 'chunkLength') at System.Text.StringBuilder.ToString()
+                                                
                                                 var progress = new Progress<string>(async (output) =>
                                                 {
+                                                    // TODO: Review the error message.
+                                                    // Appending new output to the previous
+                                                    // cumulative_output.AppendLine(output);
+
+                                                    // Updating message (cumulative output)
+                                                    await botClient.EditMessageText(
+                                                        chatId: sentMessage.Chat.Id,
+                                                        messageId: sentMessage.MessageId,
+                                                        text:   $"Download progress:\n{output}"
+                                                    );
+
+                                                    /* Replace cumulative output to get only last update messages.
                                                     // Updating message
                                                     await botClient.EditMessageText(
                                                         chatId: sentMessage.Chat.Id,
                                                         messageId: sentMessage.MessageId,
                                                         text:   $"Download progress:\n{output}"
                                                     );
+                                                    */
                                                 });
-
-                                                await ytdlp.StartDownloadAsync(YoutubeVideoIDRegex().Match(message.Text).ToString(), progress);
+                                                
+                                                await ytdlp.StartDownloadAsync(YoutubeVideoIDRegex().Match(message.Text).ToString(), progress); // Starting download, also tracking progress string changes.
 
                                                 await botClient.SendMessage(
                                                     chat.Id,

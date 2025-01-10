@@ -75,7 +75,7 @@ namespace RA_BCS
                                           // "-o \"%(title)s.%(ext)s\"" + // Output name template
                                           $" {url}"; // URL from user
             
-            process.StartInfo.CreateNoWindow = false; // TODO: Set to true. For debugging purposes
+            process.StartInfo.CreateNoWindow = true; // TODO: Set to true. For debugging purposes
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.RedirectStandardError = true;
             
