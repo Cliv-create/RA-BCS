@@ -375,7 +375,7 @@ namespace RA_BCS
                                             await botClient.SendMessage(
                                                 chat.Id,
                                                 text:   "Выбери клавиатуру:\n" +
-                                                        "/inline\n" +
+                                                        "/inline (commands)\n" +
                                                         "/reply\n",
                                                 protectContent: true,
                                                 replyParameters: message.MessageId
@@ -390,27 +390,27 @@ namespace RA_BCS
                                             var inlineKeyboard = new InlineKeyboardMarkup(
                                             new List<InlineKeyboardButton[]>() // здесь создаем лист (массив), который содержит в себе массив из класса кнопок
                                             {
-                                        // Каждый новый массив - это дополнительные строки,
-                                        // а каждая дополнительная строка (кнопка) в массиве - это добавление ряда
+                                                // Каждый новый массив - это дополнительные строки,
+                                                // а каждая дополнительная строка (кнопка) в массиве - это добавление ряда
 
-                                        new InlineKeyboardButton[] // тут создаем массив кнопок
-                                        {
-                                            InlineKeyboardButton.WithUrl("GitHub", "https://habr.com/"),
-                                            InlineKeyboardButton.WithCallbackData("А это просто кнопка", "button1"),
-                                        },
-                                        new InlineKeyboardButton[]
-                                        {
-                                            InlineKeyboardButton.WithCallbackData("Тут еще одна", "button2"),
-                                            InlineKeyboardButton.WithCallbackData("И здесь", "button3"),
-                                        },
+                                                new InlineKeyboardButton[] // тут создаем массив кнопок
+                                                {
+                                                    InlineKeyboardButton.WithUrl("GitHub", "https://habr.com/"),
+                                                    InlineKeyboardButton.WithCallbackData("Command list", "button1"),
+                                                },
+                                                new InlineKeyboardButton[]
+                                                {
+                                                    InlineKeyboardButton.WithCallbackData("Show YTDLP path", "button2"),
+                                                    InlineKeyboardButton.WithCallbackData("И здесь", "button3"),
+                                                },
                                             });
 
                                             await botClient.SendMessage(
-                                            chat.Id,
-                                            text: "Это inline клавиатура!",
-                                            protectContent: true,
-                                            replyParameters: message.MessageId,
-                                            replyMarkup: inlineKeyboard
+                                                chat.Id,
+                                                text: "Это inline клавиатура!",
+                                                protectContent: true,
+                                                replyParameters: message.MessageId,
+                                                replyMarkup: inlineKeyboard
                                             ); // Все клавиатуры передаются в параметр replyMarkup
 
                                             return;
@@ -423,19 +423,19 @@ namespace RA_BCS
                                             var replyKeyboard = new ReplyKeyboardMarkup(
                                                 new List<KeyboardButton[]>()
                                                 {
-                                            new KeyboardButton[]
-                                            {
-                                                new KeyboardButton("Привет! Ты кто?"),
-                                                new KeyboardButton("Пока!"),
-                                            },
-                                            new KeyboardButton[]
-                                            {
-                                                new KeyboardButton("Выключись!")
-                                            },
-                                            new KeyboardButton[]
-                                            {
-                                                new KeyboardButton("[ЗАРЕЗЕРВИРОВАННО]")
-                                            }
+                                                    new KeyboardButton[]
+                                                    {
+                                                        new KeyboardButton("Привет! Ты кто?"),
+                                                        new KeyboardButton("Пока!"),
+                                                    },
+                                                    new KeyboardButton[]
+                                                    {
+                                                        new KeyboardButton("Выключись!")
+                                                    },
+                                                    new KeyboardButton[]
+                                                    {
+                                                        new KeyboardButton("[ЗАРЕЗЕРВИРОВАННО]")
+                                                    }
                                                 }
                                             )
                                             {
@@ -446,11 +446,11 @@ namespace RA_BCS
                                             };
 
                                             await botClient.SendMessage(
-                                                chat.Id,
-                                                text: "Это reply клавиатура!",
-                                                protectContent: true,
-                                                replyParameters: message.MessageId,
-                                                replyMarkup: replyKeyboard
+                                                    chat.Id,
+                                                    text: "Это reply клавиатура!",
+                                                    protectContent: true,
+                                                    replyParameters: message.MessageId,
+                                                    replyMarkup: replyKeyboard
                                             ); // опять передаем клавиатуру в параметр replyMarkup
 
                                             return;
@@ -493,72 +493,85 @@ namespace RA_BCS
 
                     #region UpdateType CallbackQuery (inline response handle)
                     case UpdateType.CallbackQuery:
+                    {
+                        // Переменная, которая будет содержать в себе всю информацию о кнопке, которую нажали
+                        var callbackQuery = update.CallbackQuery;
+
+                        // Аналогично и с Message мы можем получить информацию о чате, о пользователе и т.д.
+                        var user = callbackQuery.From;
+
+                        // Выводим на экран нажатие кнопки
+                        Console.WriteLine($"{user.FirstName} ({user.Id}) pressed button: {callbackQuery.Data}");
+
+                        // Вот тут нужно уже быть немножко внимательным и не путаться!
+                        // Мы пишем не callbackQuery.Chat , а callbackQuery.Message.Chat , так как
+                        // кнопка привязана к сообщению, то мы берем информацию от сообщения.
+                        var chat = callbackQuery.Message.Chat;
+
+                        // Adding switch block for checking buttons
+                        switch (callbackQuery.Data)
                         {
-                            // Переменная, которая будет содержать в себе всю информацию о кнопке, которую нажали
-                            var callbackQuery = update.CallbackQuery;
+                            // Data - our custom button ID that we specified in parameter callbackData when creating buttons: InlineKeyboardButton.WithCallbackData("Command list", "button1")
 
-                            // Аналогично и с Message мы можем получить информацию о чате, о пользователе и т.д.
-                            var user = callbackQuery.From;
-
-                            // Выводим на экран нажатие кнопки
-                            Console.WriteLine($"{user.FirstName} ({user.Id}) pressed button: {callbackQuery.Data}");
-
-                            // Вот тут нужно уже быть немножко внимательным и не путаться!
-                            // Мы пишем не callbackQuery.Chat , а callbackQuery.Message.Chat , так как
-                            // кнопка привязана к сообщению, то мы берем информацию от сообщения.
-                            var chat = callbackQuery.Message.Chat;
-
-                            // Добавляем блок switch для проверки кнопок
-                            switch (callbackQuery.Data)
+                            case "button1":
                             {
-                                // Data - это придуманный нами id кнопки, мы его указывали в параметре
-                                // callbackData при создании кнопок. У меня это button1, button2 и button3
+                                // In this type of keyboard this method is mandatory.
+                                // In order to send Telegram request that user pressed a button
+                                await botClient.AnswerCallbackQuery(callbackQuery.Id);
 
-                                case "button1":
-                                    {
-                                        // В этом типе клавиатуры обязательно нужно использовать следующий метод
-                                        await botClient.AnswerCallbackQuery(callbackQuery.Id);
-                                        // Для того, чтобы отправить телеграмму запрос, что мы нажали на кнопку
-
-                                        await botClient.SendMessage(
-                                            chat.Id,
-                                            text: $"Вы нажали на {callbackQuery.Data}",
-                                            protectContent: true
-                                        );
-                                        return;
-                                    }
-
-                                case "button2":
-                                    {
-                                        // А здесь мы добавляем наш сообственный текст, который заменит слово "загрузка", когда мы нажмем на кнопку
-                                        await botClient.AnswerCallbackQuery(callbackQuery.Id, "Тут может быть ваш текст!");
-
-                                        await botClient.SendMessage(
-                                            chat.Id,
-                                            text: $"Вы нажали на {callbackQuery.Data}",
-                                            protectContent: true
-                                        );
-                                        return;
-                                    }
-
-                                case "button3":
-                                    {
-                                        // А тут мы добавили еще showAlert, чтобы отобразить пользователю полноценное окно
-                                        await botClient.AnswerCallbackQuery(callbackQuery.Id, "А это полноэкранный текст!", showAlert: true);
-
-                                        await botClient.SendMessage(
-                                            chat.Id,
-                                            text: $"Вы нажали на {callbackQuery.Data}",
-                                            protectContent: true
-                                        );
-                                        return;
-                                    }
+                                // TODO: Remove Debug section.
+                                await botClient.SendMessage(
+                                    chat.Id,
+                                    text: $"Commands:\n" +
+                                            "/start - Start menu\n" +
+                                            "/inline - Info menu\n" +
+                                            "/reply - Unused\n" +
+                                            "Debug:\n" + 
+                                            $"Button pressed: {callbackQuery.Data}",
+                                    protectContent: false // TODO: Change this if needed.
+                                );
+                                return;
                             }
 
-                            return;
+                            case "button2":
+                            {
+                                // А здесь мы добавляем наш сообственный текст, который заменит слово "загрузка", когда мы нажмем на кнопку
+                                // Adding string parameter here makes temporary message appear at the top of chat window.
+                                // Example use: Displaying error message to the user.
+
+                                // TODO: Remove text parameter.
+                                await botClient.AnswerCallbackQuery(callbackQuery.Id, "Showed YTDLP path!");
+                                
+                                // TODO: Remove Debug section.
+                                await botClient.SendMessage(
+                                    chat.Id,
+                                    text:   "YTDLP path:\n" +
+                                            $"<code>{YTDLP.Path}</code>\n" +
+                                            "Debug:\n" + 
+                                            $"Button pressed: {callbackQuery.Data}",
+                                    ParseMode.Html,
+                                    protectContent: true
+                                );
+                                return;
+                            }
+
+                            case "button3":
+                            {
+                                // Setting showAlert to true makes a full window appear for the user.
+                                await botClient.AnswerCallbackQuery(callbackQuery.Id, "А это полноэкранный текст!", showAlert: true);
+
+                                await botClient.SendMessage(
+                                    chat.Id,
+                                    text: $"Вы нажали на {callbackQuery.Data}",
+                                    protectContent: true
+                                );
+                                return;
+                            }
                         }
-                        #endregion
-                        // switch(update.Type) level
+                        return;
+                    }
+                    #endregion
+                    // switch(update.Type) level
                 }
             }
             catch (OperationCanceledException ocex)

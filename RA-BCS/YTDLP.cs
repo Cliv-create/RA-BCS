@@ -108,6 +108,11 @@ namespace RA_BCS
             await process.WaitForExitAsync();
         }
 
+        internal static string Path
+        {
+            get => ytdlp_path;
+        }
+
         /* Unused
         /// <summary>
         /// Matches youtube ID link using Regex and returns it.
