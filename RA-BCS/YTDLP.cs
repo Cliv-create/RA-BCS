@@ -60,7 +60,7 @@ namespace RA_BCS
 
         public async Task StartDownloadAsync(/*string ytdlp_path,*/ string url, /*string[] arguments,*/ IProgress<string> progress)
         {
-            // tring[] args = { "1", "2" };
+            // string[] args = { "1", "2" };
             Process process = new Process();
             // int args_lenght = arguments.GetLength(0);
             // if (arguments.GetLength(0) == 0) {}
@@ -75,7 +75,7 @@ namespace RA_BCS
                                           // "-o \"%(title)s.%(ext)s\"" + // Output name template
                                           $" {url}"; // URL from user
             
-            process.StartInfo.CreateNoWindow = true; // TODO: Set to true. For debugging purposes
+            process.StartInfo.CreateNoWindow = true;
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.RedirectStandardError = true;
             
