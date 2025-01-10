@@ -213,29 +213,27 @@ namespace RA_BCS
                                                     // chatId: message.Chat.Id,
                                                     chat.Id,
                                                     text:   "Starting download...",
-                                                    protectContent: true,
+                                                    protectContent: false, // TODO: Change to true if needed.
                                                     replyParameters: message.MessageId
                                                 );
 
                                                 YTDLP ytdlp = new YTDLP(); // YTDLP instance for download.
 
-                                                // StringBuilder cumulative_output = new StringBuilder();
-                                                // Commented-out, because generates following error:
-                                                // System.ArgumentOutOfRangeException: Index was out of range.
-                                                // Must be non-negative and less than or equal to the size of the collection.
-                                                // (Parameter 'chunkLength') at System.Text.StringBuilder.ToString()
+                                                StringBuilder cumulative_output = new StringBuilder(3500); // 3500 symbols to minimize memory re-allocation. Change this, if the average amount of symbols in the output changed.
                                                 
                                                 var progress = new Progress<string>(async (output) =>
                                                 {
+                                                    try
+                                                    {
                                                     // TODO: Review the error message.
                                                     // Appending new output to the previous
-                                                    // cumulative_output.AppendLine(output);
+                                                    cumulative_output.AppendLine(output);
 
                                                     // Updating message (cumulative output)
                                                     await botClient.EditMessageText(
                                                         chatId: sentMessage.Chat.Id,
                                                         messageId: sentMessage.MessageId,
-                                                        text:   $"Download progress:\n{output}"
+                                                        text:   $"Download progress:\n{cumulative_output}"
                                                     );
 
                                                     /* Replace cumulative output to get only last update messages.
@@ -246,6 +244,22 @@ namespace RA_BCS
                                                         text:   $"Download progress:\n{output}"
                                                     );
                                                     */
+                                                    }
+                                                    catch (ArgumentOutOfRangeException ex)
+                                                    {
+                                                        Console.WriteLine($"ArgumentOutOfRangeException! Argument value: {ex.ActualValue}.\nToString: {ex.ToString}");
+                                                    }
+                                                    catch (Exception ex)
+                                                    {
+                                                        Console.WriteLine($"Caught exception! Message: {ex.Message}.\nToString: {ex.ToString}");
+
+                                                        // Sending error message to the user.
+                                                        await botClient.EditMessageText(
+                                                            chatId: sentMessage.Chat.Id,
+                                                            messageId: sentMessage.MessageId,
+                                                            text:   $"Error occured!:\n{ex.ToString}"
+                                                        );
+                                                    }
                                                 });
                                                 
                                                 await ytdlp.StartDownloadAsync(YoutubeVideoIDRegex().Match(message.Text).ToString(), progress); // Starting download, also tracking progress string changes.
