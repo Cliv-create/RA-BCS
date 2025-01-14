@@ -42,8 +42,10 @@ namespace RA_BCS
         // TODO: Move renamed class into it's own file
         // TODO: Get TOKEN from a file. - DONE
         // TODO: ALLOWEDID class for ALLOWED_ID array.
-        private static ITelegramBotClient _botClient;
-        private static ReceiverOptions _receiverOptions;
+
+        // TODO: Remove static modifier. Ensure each instance and launch a different bot.
+        private ITelegramBotClient _botClient;
+        private ReceiverOptions _receiverOptions;
 
         // Match YoutubeID pattern
         // Link to the pattern: https://regex101.com/library/OY96XI
@@ -113,7 +115,7 @@ namespace RA_BCS
                 // ThrowPendingUpdates = true,
                 DropPendingUpdates = true,
             };
-
+            
             // TODO: Change CancellationToken handler to Task.Delay(-1, cancellationToken: cts.Token.)
             // Link for the change: https://habr.com/ru/articles/657583/comments/#comment_24205299
             using var cts = new CancellationTokenSource();
