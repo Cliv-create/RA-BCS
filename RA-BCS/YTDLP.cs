@@ -121,6 +121,12 @@ namespace RA_BCS
             get => ytdlp_path;
         }
 
+        public string GetDownloadDirectoryPath()
+        {
+            
+            return "";
+        }
+
         /* Unused
         /// <summary>
         /// Matches youtube ID link using Regex and returns it.
