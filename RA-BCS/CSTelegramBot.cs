@@ -46,6 +46,8 @@ namespace RA_BCS
         // TODO: Remove static modifier. Ensure each instance and launch a different bot.
         private ITelegramBotClient _botClient;
         private ReceiverOptions _receiverOptions;
+        
+        private string token = "";
 
         // Match YoutubeID pattern
         // Link to the pattern: https://regex101.com/library/OY96XI
@@ -59,20 +61,39 @@ namespace RA_BCS
         [GeneratedRegex(@"(?<=\/link ).*", RegexOptions.IgnoreCase, "en-US")]
         private static partial Regex MatchAfterLinkCommand();
 
-        public async Task Main(string[] args = null)
+        // TODO: Add token validation
+        /// <summary>
+        /// CSTelegramBot constructor with parameters. Required bot token. Token get's checked if it's null or empty.
+        /// </summary>
+        /// <param name="token">Bot token to create bot instance.</param>
+        public CSTelegramBot(string token)
         {
-            /*
-             * This is RA-BCS (Remote Api-Based Control Server). A "student project" aimed at using API's, listening to incoming messages and launch utilities.
-             * "Utilities" in this case - YT-DLP. You can find this project at: https://github.com/yt-dlp/yt-dlp
-             * Objective: Launch YT-DLP at specified path with predefined options and URL that was provided throught API messages.
-             * Additional objectives (probability of implementation is low): List files from specified folder, and move them to another folder (by specifying files to move as numbers)
-             * Started from this guide: https://habr.com/ru/articles/756814/
-             * 
-             * Directory containing .exe must have "secret.txt" file.
-             * It should only have 1 line - bot token.
-             * WARNING! DO NOT SHARE BOT TOKEN!
-            */
             Console.WriteLine("Starting up!");
+            // Token retreival
+            this.token = token;
+            if (token == "" || token == null)
+            {
+                Console.WriteLine("Empty or null token detected!\nExiting...");
+                System.Environment.ExitCode = -1;
+            }
+            _botClient       = new TelegramBotClient(token);
+            _receiverOptions = new ReceiverOptions
+            {
+                AllowedUpdates = new[] // Тут указываем типы получаемых Update`ов, о них подробнее расказано тут https://core.telegram.org/bots/api#update
+                {
+                    UpdateType.Message, // Сообщения (текст, фото/видео, голосовые/видео сообщения и т.д.)
+                    UpdateType.CallbackQuery, // Inline кнопки
+                },
+                DropPendingUpdates = true,
+            };
+        }
+        
+        /// <summary>
+        /// CSTelegramBot constructor without parameters. Requires secret.txt file in directory with bot token.
+        /// </summary>
+        public CSTelegramBot()
+        {
+            Console.WriteLine("Building bot instance!");
             // Token retreival
             string token = "";
             try
@@ -115,6 +136,22 @@ namespace RA_BCS
                 // ThrowPendingUpdates = true,
                 DropPendingUpdates = true,
             };
+            Console.WriteLine("Built bot instance successfully!");
+        }
+
+        public async Task Main(string[] args = null)
+        {
+            /*
+             * This is RA-BCS (Remote Api-Based Control Server). A "student project" aimed at using API's, listening to incoming messages and launch utilities.
+             * "Utilities" in this case - YT-DLP. You can find this project at: https://github.com/yt-dlp/yt-dlp
+             * Objective: Launch YT-DLP at specified path with predefined options and URL that was provided throught API messages.
+             * Additional objectives (probability of implementation is low): List files from specified folder, and move them to another folder (by specifying files to move as numbers)
+             * Started from this guide: https://habr.com/ru/articles/756814/
+             * 
+             * Directory containing .exe must have "secret.txt" file.
+             * It should only have 1 line - bot token.
+             * WARNING! DO NOT SHARE BOT TOKEN!
+            */
             
             // TODO: Change CancellationToken handler to Task.Delay(-1, cancellationToken: cts.Token.)
             // Link for the change: https://habr.com/ru/articles/657583/comments/#comment_24205299
@@ -122,6 +159,8 @@ namespace RA_BCS
 
             // TODO: If implementing multiple async tasks move to this approach:
             // https://learn.microsoft.com/ru-ru/dotnet/standard/parallel-programming/how-to-cancel-a-task-and-its-children
+            // Launching bot
+            Console.WriteLine("Launching bot!");
             var receivingTask = Task.Run(() =>
                 _botClient.StartReceiving(
                     UpdateHandler,
@@ -131,8 +170,6 @@ namespace RA_BCS
                 ),
                 cts.Token
             );
-
-            // _botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token); // Launching bot
 
             var me = await _botClient.GetMe();
             Console.WriteLine($"{me.FirstName} launched!");

@@ -24,6 +24,9 @@ namespace RA_BCS
         // TODO: Change this.
         private static string ytdlp_path = "";
         
+        /// <summary>
+        /// YTDLP constructor withouts parameters. Requires ytdlp_path.txt file with yt_dlp.exe file path.
+        /// </summary>
         static YTDLP()
         {
             try
@@ -58,13 +61,18 @@ namespace RA_BCS
             }
         }
 
-        public async Task StartDownloadAsync(/*string ytdlp_path,*/ string url, /*string[] arguments,*/ IProgress<string> progress)
+        // TODO: Change arguments list
+        // string url (mandatory), string[] arguments (optional, but can be used more frequently), IProgress<string> progress (optional)
+        public async Task StartDownloadAsync(/*string ytdlp_path,*/ string url, /*string[] arguments,*/ IProgress<string> progress = null)
         {
             // string[] args = { "1", "2" };
             Process process = new Process();
             // int args_lenght = arguments.GetLength(0);
             // if (arguments.GetLength(0) == 0) {}
 
+            // TODO: Uncomment string[] arguments
+            // Implement StringBuilder that will build all default arguments + user-defined arguments
+            // If same arguments were found, prefer user-defined arguments
             process.StartInfo.FileName = ytdlp_path;
             // Using arguments
             process.StartInfo.Arguments = $"--progress-template \"download:[download] %(progress._percent_str)s of %(progress._total_bytes_str)s. ETA: %(progress._eta_str)s\"" + // Progress template for console output
@@ -86,7 +94,7 @@ namespace RA_BCS
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
-                    progress.Report(e.Data); // Sending data to progress instance
+                    progress?.Report(e.Data); // Sending data to progress instance
                     Console.WriteLine($"\nReceived update: {e.Data}"); // TODO: Remove. Temporary
                 }
             };
