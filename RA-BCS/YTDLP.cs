@@ -63,7 +63,14 @@ namespace RA_BCS
 
         // TODO: Change arguments list
         // string url (mandatory), string[] arguments (optional, but can be used more frequently), IProgress<string> progress (optional)
-        public async Task StartDownloadAsync(/*string ytdlp_path,*/ string url, /*string[] arguments,*/ IProgress<string> progress = null)
+
+        /// <summary>
+        /// StartDownload (async method). Uses IProgress<string>, by redirecting console output, updates IProgress<string> with latest output. Has default arguments, passed to console application.
+        /// </summary>
+        /// <param name="url">Video URL to be downloaded.</param>
+        /// <param name="progress">IProgress<string>, which will be updated with latest output from console application.</param>
+        /// <returns></returns>
+        public async Task StartDownload(/*string ytdlp_path,*/ string url, /*string[] arguments,*/ IProgress<string> progress = null)
         {
             // string[] args = { "1", "2" };
             Process process = new Process();

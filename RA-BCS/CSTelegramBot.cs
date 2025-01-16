@@ -233,15 +233,13 @@ namespace RA_BCS
                             var user    = message.From;
                             Console.WriteLine($"{user.FirstName} ({user.Id}) wrote message: {message.Text}");
                             var chat = message.Chat; // All info about chat
-                                                     // chat.Id; // Allowed ID check for later
+                                                     // chat.Id; - allows ID check for later
 
                             switch (message.Type)
                             {
                                 #region Text MessageType
                                 case MessageType.Text:
                                     {
-                                        // MatchAfterLinkCommand
-                                        // if (YoutubeVideoIDRegex().IsMatch(message.Text))
                                         // Link check
                                         if (MatchAfterLinkCommand().IsMatch(message.Text))
                                         {
@@ -252,19 +250,20 @@ namespace RA_BCS
                                                     // chatId: message.Chat.Id,
                                                     chat.Id,
                                                     text:   "Starting download...",
-                                                    protectContent: false, // TODO: Change to true if needed.
+                                                    protectContent: false, // Change to true if needed.
                                                     replyParameters: message.MessageId
                                                 );
 
-                                                YTDLP ytdlp = new YTDLP(); // YTDLP instance for download.
+                                                // YTDLP instance for download.
+                                                YTDLP ytdlp = new YTDLP();
 
-                                                StringBuilder cumulative_output = new StringBuilder(3500); // 3500 symbols to minimize memory re-allocation. Change this, if the average amount of symbols in the output changed.
+                                                // 3500 symbols to minimize memory re-allocation. Change this, if the average amount of symbols in the output changed.
+                                                StringBuilder cumulative_output = new StringBuilder(3500);
                                                 
                                                 var progress = new Progress<string>(async (output) =>
                                                 {
                                                     try
                                                     {
-                                                    // TODO: Review the error message.
                                                     // Appending new output to the previous
                                                     cumulative_output.AppendLine(output);
 
@@ -301,7 +300,8 @@ namespace RA_BCS
                                                     }
                                                 });
                                                 
-                                                await ytdlp.StartDownloadAsync(YoutubeVideoIDRegex().Match(message.Text).ToString(), progress); // Starting download, also tracking progress string changes.
+                                                // Starting download, also tracking IProgress<string> changes.
+                                                await ytdlp.StartDownload(YoutubeVideoIDRegex().Match(message.Text).ToString(), progress);
 
                                                 await botClient.SendMessage(
                                                     chat.Id,
@@ -319,43 +319,8 @@ namespace RA_BCS
                                                 replyParameters: message.MessageId
                                                 ); 
                                             }
-                                            
-
                                             return;
-
-                                            /* Unused
-                                            var sentMessage = await botClient.SendMessage(
-                                                // TODO: Delete
-                                                // chatId: message.Chat.Id,
-                                                chat.Id,
-                                                text:   "Starting download...",
-                                                protectContent: true,
-                                                replyParameters: message.MessageId
-                                            );
-
-                                            YTDLP ytdlp = new YTDLP();
-
-                                            var progress = new Progress<string>(async (output) =>
-                                            {
-                                                // Updating message
-                                                await botClient.EditMessageText(
-                                                    chatId: sentMessage.Chat.Id,
-                                                    messageId: sentMessage.MessageId,
-                                                    text:   $"Download progress:\n{output}"
-                                                );
-                                            });
-
-                                            await ytdlp.StartDownloadAsync("video_url", progress);
-
-                                            await botClient.SendMessage(
-                                                chat.Id,
-                                                text:   "Download completed.",
-                                                protectContent: true,
-                                                replyParameters: message.MessageId
-                                            );
-                                            */
                                         }
-                                        
 
                                         #region Reply-keyboard IF level
                                         if (message.Text == "Привет! Ты кто?")
@@ -406,7 +371,6 @@ namespace RA_BCS
                                             // return;
                                         }
                                         #endregion
-
 
                                         #region Commands IF level
                                         if (message.Text == "/start")
@@ -496,37 +460,31 @@ namespace RA_BCS
                                         }
                                         #endregion
 
-                                        // Out of text checks
                                         // MessageType.Text return
                                         return;
                                     }
                                 #endregion
                                 // Default to show difference in message types
                                 default:
-                                    {
-                                        await botClient.SendMessage(
-                                            chat.Id,
-                                            text: "Используй только текст!",
-                                            protectContent: true,
-                                            replyParameters: message.MessageId
-                                        );
-                                        return;
-                                    }
-                                    // MessageType.Text level
+                                {
+                                    await botClient.SendMessage(
+                                        chat.Id,
+                                        text: "Command not recognized!",
+                                        protectContent: true,
+                                        replyParameters: message.MessageId
+                                    );
+                                    return;
+                                }
+                                // MessageType.Text level
                             }
-                            // message.Type return (unreachable code)
-                            return;
-
-                            // Old code:
+                            // Send message example:
                             /*
                             await botClient.SendMessage(
                                 chat.Id,
-                                message.Text, // Sending text that user sent to us
-                                protectContent: true,
-                                replyParameters: message.MessageId // Reply to sent message or not
+                                text: "", // Sending text
+                                protectContent: true, // Will message be copy-able, or not
+                                replyParameters: message.MessageId // Reply to sent message
                             );
-
-                            return;
                             */
                         }
 
@@ -597,13 +555,14 @@ namespace RA_BCS
                             case "button3":
                             {
                                 // Setting showAlert to true makes a full window appear for the user.
-                                await botClient.AnswerCallbackQuery(callbackQuery.Id, "А это полноэкранный текст!", showAlert: true);
+                                await botClient.AnswerCallbackQuery(callbackQuery.Id, "Full screen text!", showAlert: true);
 
                                 await botClient.SendMessage(
                                     chat.Id,
-                                    text: $"Вы нажали на {callbackQuery.Data}",
+                                    text: $"You pressed on: {callbackQuery.Data}",
                                     protectContent: true
                                 );
+
                                 return;
                             }
                         }
@@ -618,7 +577,6 @@ namespace RA_BCS
                 Console.WriteLine("\nOperation was canceled");
                 Console.WriteLine($"Application/Object that caused: {ocex.Source}\nDescription: {ocex.Message}\nInstance that caused exception: {ocex.InnerException}\nHRESULT:{ocex.HResult}\nex string: {ocex.ToString}");
                 // returning from method automatically (cancellation was requested)
-
             }
             catch (Exception ex)
             {
