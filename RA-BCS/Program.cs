@@ -26,7 +26,15 @@ namespace RA_BCS
              * It should only have 1 line - bot token.
              * WARNING! DO NOT SHARE BOT TOKEN!
             */
-            
+            try
+            {
+                ConfigManager.LoadConfig();
+                // ConfigManager.GenerateInitialConfig();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
             // Telegram Bot instance
             CSTelegramBot telegram_bot = new CSTelegramBot();
             await telegram_bot.Main();

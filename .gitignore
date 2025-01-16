@@ -6,6 +6,7 @@
 # Manually-added files
 secret.txt
 yt_dlp_path.txt
+config.json
 
 # User-specific files
 *.rsuser
