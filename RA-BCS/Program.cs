@@ -28,8 +28,15 @@ namespace RA_BCS
             */
             try
             {
-                ConfigManager.LoadConfig();
-                // ConfigManager.GenerateInitialConfig();
+                // TODO: Remove, if needed.
+                if (System.IO.File.Exists("config.json"))
+                {
+                    ConfigManager.LoadConfig();
+                }
+                else
+                {
+                    ConfigManager.GenerateInitialConfig();
+                }
             }
             catch (Exception ex)
             {
