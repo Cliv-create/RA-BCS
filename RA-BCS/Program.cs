@@ -22,8 +22,8 @@ namespace RA_BCS
              * Additional objectives (probability of implementation is low): List files from specified folder, and move them to another folder (by specifying files to move as numbers)
              * Started from this guide: https://habr.com/ru/articles/756814/
              * 
-             * Directory containing .exe must have "secret.txt" file.
-             * It should only have 1 line - bot token.
+             * Directory containing .exe must have "config.json" file.
+             * To generate config.json use ConfigManager.GenerateInitialConfig() method.
              * WARNING! DO NOT SHARE BOT TOKEN!
             */
             try

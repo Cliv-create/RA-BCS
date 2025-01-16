@@ -43,11 +43,10 @@ namespace RA_BCS
         // TODO: Get TOKEN from a file. - DONE
         // TODO: ALLOWEDID class for ALLOWED_ID array.
 
-        // TODO: Remove static modifier. Ensure each instance and launch a different bot.
         private ITelegramBotClient _botClient;
         private ReceiverOptions _receiverOptions;
         
-        private string token = "";
+        private readonly string token = "";
 
         // ---
         // Match YoutubeID pattern
@@ -91,13 +90,15 @@ namespace RA_BCS
         }
         
         /// <summary>
-        /// CSTelegramBot constructor without parameters. Requires secret.txt file in directory with bot token.
+        /// CSTelegramBot constructor without parameters. Requires config.json file in directory with bot token.
         /// </summary>
         public CSTelegramBot()
         {
             Console.WriteLine("Building bot instance!");
             // Token retreival
-            string token = "";
+            token = ConfigManager.Get("telegram_token");
+
+            /*
             try
             {
                 if (!System.IO.File.Exists("secret.txt"))
@@ -122,6 +123,8 @@ namespace RA_BCS
             {
                 Console.WriteLine(ex.ToString());
             }
+            */
+
             if (token == "" || token == null)
             {
                 Console.WriteLine("Empty or null token detected!\nExiting...");
@@ -150,8 +153,8 @@ namespace RA_BCS
              * Additional objectives (probability of implementation is low): List files from specified folder, and move them to another folder (by specifying files to move as numbers)
              * Started from this guide: https://habr.com/ru/articles/756814/
              * 
-             * Directory containing .exe must have "secret.txt" file.
-             * It should only have 1 line - bot token.
+             * Directory containing .exe must have "config.json" file.
+             * It should have telegram_token set to your telegram bot token.
              * WARNING! DO NOT SHARE BOT TOKEN!
             */
             

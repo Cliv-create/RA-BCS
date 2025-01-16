@@ -17,9 +17,9 @@ namespace RA_BCS
          * TODO: Add a proper path getting
          * TODO: Ensure Server classes will have certain methods. (Interface implementation)
          * 
-         * Directory, containing server .exe file must have yt_dlp_path.txt
-         * It should have one line only - path to yt_dlp.exe file on your computer
-         * Path should not be in "" symbols.
+         * Directory, containing server .exe file must have config.json file.
+         * yt-dlp_path property should be set to yt_dlp.exe path on your computer. WARNING: Correctly escape "\" charachters in config.json.
+         * Path should not be in "" symbols, and "\" symbols escaped properly.
         */
         // TODO: Change this.
         private static string ytdlp_path = "";
@@ -29,6 +29,8 @@ namespace RA_BCS
         /// </summary>
         static YTDLP()
         {
+            ytdlp_path = ConfigManager.Get("yt-dlp_path");
+            /*
             try
             {
                 if (!System.IO.File.Exists("ytdlp_path.txt"))
@@ -54,6 +56,8 @@ namespace RA_BCS
             {
                 Console.WriteLine(ex.ToString());
             }
+            */
+
             if (ytdlp_path == "" || ytdlp_path == null)
             {
                 Console.WriteLine("Empty or null token detected!\nExiting...");
@@ -130,8 +134,7 @@ namespace RA_BCS
 
         public string GetDownloadDirectoryPath()
         {
-            
-            return "";
+            return ConfigManager.Get("yt-dlp_download_path");
         }
 
         /* Unused
