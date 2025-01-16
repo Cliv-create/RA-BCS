@@ -49,6 +49,7 @@ namespace RA_BCS
         
         private string token = "";
 
+        // ---
         // Match YoutubeID pattern
         // Link to the pattern: https://regex101.com/library/OY96XI
         // WARNING: Don't forger to switch FLAVOR setting to .NET 7.0 (C#) in order to debug and test pattern
@@ -60,6 +61,7 @@ namespace RA_BCS
         // (?<=\/link ).*
         [GeneratedRegex(@"(?<=\/link ).*", RegexOptions.IgnoreCase, "en-US")]
         private static partial Regex MatchAfterLinkCommand();
+        // ---
 
         // TODO: Add token validation
         /// <summary>
@@ -194,22 +196,18 @@ namespace RA_BCS
             {
                 cts.Dispose();
             }
-
-            // Commented-out because CancellationToken was implemented. For removal.
-            // await Task.Delay(-1); // Infinite delay, so that the bot is always up.
         }
 
         /*
-        public static async Task<bool> SendTextMessage()
+        public static async Task<bool> SendTextMessage(string text)
         {
             await botClient.SendMessage(
                 chat.Id,
-                text:   "Привет!\n" +
-                        "Это проект RA-BCS для удалённого управления компьютером.",
-                protectContent: true,
+                text:   $"{text}",
+                protectContent: false,
                 replyParameters: message.MessageId
             );
-            return false;
+            return true;
         }
         */
 
