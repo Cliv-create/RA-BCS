@@ -12,6 +12,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using static Telegram.Bot.TelegramBotClient;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Builder;
+using System.Globalization;
 
 namespace RA_BCS
 {
@@ -37,10 +38,7 @@ namespace RA_BCS
 
     internal partial class CSTelegramBot
     {
-        // TODO: Rename Program into TelegramBotServer / CSTelegramBot
         // TODO: Rename Main function into Start
-        // TODO: Move renamed class into it's own file
-        // TODO: Get TOKEN from a file. - DONE
         // TODO: ALLOWEDID class for ALLOWED_ID array.
 
         private ITelegramBotClient _botClient;
@@ -49,9 +47,10 @@ namespace RA_BCS
         private readonly string token = "";
 
         // ---
+
         // Match YoutubeID pattern
         // Link to the pattern: https://regex101.com/library/OY96XI
-        // WARNING: Don't forger to switch FLAVOR setting to .NET 7.0 (C#) in order to debug and test pattern
+        // WARNING: Don't forget to switch FLAVOR setting to .NET 7.0 (C#) in order to debug and test pattern
         // YoutubeIDPattern
         [GeneratedRegex(@"(?:https?:)?(?:\/\/)?(?:[0-9A-Z-]+\.)?(?:youtu\.be\/|youtube(?:-nocookie)?\.com\S*?[^\w\s-])([\w-]{11})(?=[^\w-]|$)(?![?=&+%\w.-]*(?:['""][^<>]*>|<\/a>))[?=&+%\w.-]*", RegexOptions.IgnoreCase, "en-US")]
         private static partial Regex YoutubeVideoIDRegex();
@@ -60,9 +59,18 @@ namespace RA_BCS
         // (?<=\/link ).*
         [GeneratedRegex(@"(?<=\/link ).*", RegexOptions.IgnoreCase, "en-US")]
         private static partial Regex MatchAfterLinkCommand();
+
+        // Return match after /move command.
+        [GeneratedRegex(@"(?<=\/move ).*", RegexOptions.IgnoreCase, "en-US")]
+        private static partial Regex MatchAfterMoveCommand();
+
+        // Return match after /move command (matches "/move all" and "/move 1 2 3 ... 9" (in any order))
+        // ^/move\s+(?:(?<all>all)|(?<numbers>(?:\d+\s*)+))$
+        [GeneratedRegex(@"^/move\s+(?:(?<all>all)|(?<numbers>(?:\d+\s*)+))$", RegexOptions.IgnoreCase, "en-US")]
+        private static partial Regex FindMatchAfterMoveCommand();
+
         // ---
 
-        // TODO: Add token validation
         /// <summary>
         /// CSTelegramBot constructor with parameters. Required bot token. Token get's checked if it's null or empty.
         /// </summary>
@@ -95,41 +103,16 @@ namespace RA_BCS
         public CSTelegramBot()
         {
             Console.WriteLine("Building bot instance!");
+
             // Token retreival
             token = ConfigManager.Get("telegram_token");
-
-            /*
-            try
-            {
-                if (!System.IO.File.Exists("secret.txt"))
-                {
-                    Console.WriteLine("secret.txt not found!");
-                    System.IO.File.Create("secret.txt").Dispose(); // if file doesn't exist - create new secret.txt file and immediatly close FileStream (otherwise file will be left open)
-                    throw new Exception("File not found. Created an empty file.");
-                    // return;
-                }
-                // TODO: Change this for settings.json later
-                token = Convert.ToString(System.IO.File.ReadAllText("secret.txt")); // If file exists - grab all lines (secret.txt should have 1 line only (token))
-            }
-            catch (FileNotFoundException ex)
-            {
-                Console.WriteLine("File not found!\n" + ex.ToString());
-            }
-            catch (DirectoryNotFoundException ex)
-            {
-                Console.WriteLine("Directory not found!\n" + ex.ToString());
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-            */
 
             if (token == "" || token == null)
             {
                 Console.WriteLine("Empty or null token detected!\nExiting...");
                 System.Environment.ExitCode = -1;
             }
+
             _botClient       = new TelegramBotClient(token);
             _receiverOptions = new ReceiverOptions
             {                           
@@ -141,6 +124,7 @@ namespace RA_BCS
                 // ThrowPendingUpdates = true,
                 DropPendingUpdates = true,
             };
+
             Console.WriteLine("Built bot instance successfully!");
         }
 
@@ -201,7 +185,7 @@ namespace RA_BCS
             }
         }
 
-        /*
+        /* SendTextMessage (unused)
         public static async Task<bool> SendTextMessage(string text)
         {
             await botClient.SendMessage(
@@ -238,9 +222,10 @@ namespace RA_BCS
 
                             switch (message.Type)
                             {
-                                #region Text MessageType
+                                #region MessageType - Text
                                 case MessageType.Text:
                                     {
+                                        #region Commands level
                                         // Link check
                                         if (MatchAfterLinkCommand().IsMatch(message.Text))
                                         {
@@ -313,15 +298,102 @@ namespace RA_BCS
                                             }
                                             else
                                             {
-                                               await botClient.SendMessage(
-                                                chat.Id,
-                                                text:   "Link not found. Returning...",
-                                                protectContent: true,
-                                                replyParameters: message.MessageId
-                                                ); 
+                                                await botClient.SendMessage(
+                                                    chat.Id,
+                                                    text:   "Link not found. Returning...",
+                                                    protectContent: true,
+                                                    replyParameters: message.MessageId
+                                                );
                                             }
                                             return;
                                         }
+                                        
+                                        // Move check
+                                        if (MatchAfterMoveCommand().IsMatch(message.Text))
+                                        {
+                                            Console.WriteLine($"Matched after /move command with following text: {message.Text}");
+                                            Match match = FindMatchAfterMoveCommand().Match(message.Text);
+                                            
+                                            if (match.Success)
+                                            {
+                                                var sentMessage = await botClient.SendMessage(
+                                                    chat.Id,
+                                                    text:   "Starting file move...",
+                                                    protectContent: false, // Change to true if needed.
+                                                    replyParameters: message.MessageId
+                                                );
+
+                                                Console.WriteLine("Matched pattern successfully!");
+                                                try
+                                                {
+                                                    if (match.Groups["all"].Success)
+                                                    {
+                                                        Console.WriteLine(@"Matched 'all' group. Starting file move.");
+
+                                                        await FileHandler.MoveFilesToDirectory(
+                                                            ConfigManager.Get("yt-dlp_download_path"),
+                                                            ConfigManager.Get("downloaded_files_destination"),
+                                                            move_all: true
+                                                        );
+                                                    }
+                                                    else if (match.Groups["numbers"].Success)
+                                                    {
+                                                        Console.WriteLine("Matched 'numbers' group. Starting int[] array parse.");
+
+                                                        string numbers_string = match.Groups["numbers"].Value.Trim();
+                                                        string[] number_strings = numbers_string.Split(new[] { ",", ", " }, StringSplitOptions.RemoveEmptyEntries);
+
+                                                        int[] numbers = Array.ConvertAll(number_strings, int.Parse);
+                                                        Console.WriteLine($"Finished int[] array parse. Array: {numbers}");
+
+                                                        await FileHandler.MoveFilesToDirectory(
+                                                            ConfigManager.Get("yt-dlp_download_path"),
+                                                            ConfigManager.Get("downloaded_files_destination"),
+                                                            files_to_move: numbers
+                                                        );
+                                                    }
+                                                    await botClient.EditMessageText(
+                                                        chatId: sentMessage.Chat.Id,
+                                                        messageId: sentMessage.MessageId,
+                                                        text:   "Moved files succeffsully!"
+                                                    );
+                                                }
+                                                catch (ArgumentNullException ex)
+                                                {
+                                                    Console.WriteLine($"Catched ArgumentNullException exception! Maybe input was null? Message: {ex.Message}\nTo string: {ex.ToString}");
+                                                    
+                                                    // Sending error message to the user.
+                                                    await botClient.EditMessageText(
+                                                        chatId: sentMessage.Chat.Id,
+                                                        messageId: sentMessage.MessageId,
+                                                        text:   $"Error occured! (null occured):\n{ex.ToString}"
+                                                    );
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    Console.WriteLine($"Catched an exception! Message: {ex.Message}\nTo string: {ex.ToString}");
+
+                                                    // Sending error message to the user.
+                                                    await botClient.EditMessageText(
+                                                        chatId: sentMessage.Chat.Id,
+                                                        messageId: sentMessage.MessageId,
+                                                        text:   $"Error occured!:\n{ex.ToString}"
+                                                    );
+                                                }
+                                            }
+                                            else
+                                            {
+                                                await botClient.SendMessage(
+                                                    chat.Id,
+                                                    text:   "Move command failed to parse!. Returning...",
+                                                    protectContent: true,
+                                                    replyParameters: message.MessageId
+                                                );
+                                            }
+                                            return;
+                                        }
+
+                                        #endregion
 
                                         #region Reply-keyboard IF level
                                         if (message.Text == "Привет! Ты кто?")
@@ -361,15 +433,15 @@ namespace RA_BCS
                                             // return;
                                         }
 
-                                        if (message.Text == "[ЗАРЕЗЕРВИРОВАННО]")
+                                        if (message.Text == "Create inline keyboard")
                                         {
                                             await botClient.SendMessage(
                                                 chat.Id,
-                                                text: "Пока не готово!",
+                                                text: "Not implemented!",
                                                 protectContent: true,
                                                 replyParameters: message.MessageId
                                             );
-                                            // return;
+                                            return;
                                         }
                                         #endregion
 
@@ -380,7 +452,11 @@ namespace RA_BCS
                                                 chat.Id,
                                                 text:   "Выбери клавиатуру:\n" +
                                                         "/inline (commands)\n" +
-                                                        "/reply\n",
+                                                        "/reply\n" +
+                                                        "Commands:" +
+                                                        "/move" +
+                                                        "Usage: <code>/move all</code> to move all files or <code>/move [numbers of files to move]</code> (use Show files in Download location command to get needed numbers)",
+                                                ParseMode.Html,
                                                 protectContent: true,
                                                 replyParameters: message.MessageId
                                             );
@@ -405,7 +481,12 @@ namespace RA_BCS
                                                 new InlineKeyboardButton[]
                                                 {
                                                     InlineKeyboardButton.WithCallbackData("Show YTDLP path", "button2"),
-                                                    InlineKeyboardButton.WithCallbackData("И здесь", "button3"),
+                                                    InlineKeyboardButton.WithCallbackData("Show files in Download location", "button3"),
+                                                },
+                                                new InlineKeyboardButton[]
+                                                {
+                                                    InlineKeyboardButton.WithCallbackData("Show downloaded files move path", "button4"),
+                                                    InlineKeyboardButton.WithCallbackData("[TEMP]", "button5"),
                                                 },
                                             });
 
@@ -419,6 +500,7 @@ namespace RA_BCS
 
                                             return;
                                         }
+
                                         if (message.Text == "/reply")
                                         {
                                             // Тут все аналогично Inline клавиатуре, только меняются классы
@@ -438,7 +520,7 @@ namespace RA_BCS
                                                     },
                                                     new KeyboardButton[]
                                                     {
-                                                        new KeyboardButton("[ЗАРЕЗЕРВИРОВАННО]")
+                                                        new KeyboardButton("Create inline keyboard")
                                                     }
                                                 }
                                             )
@@ -478,8 +560,7 @@ namespace RA_BCS
                                 }
                                 // MessageType.Text level
                             }
-                            // Send message example:
-                            /*
+                            /* Send message example:
                             await botClient.SendMessage(
                                 chat.Id,
                                 text: "", // Sending text
@@ -555,6 +636,59 @@ namespace RA_BCS
 
                             case "button3":
                             {
+                                // In this type of keyboard this method is mandatory.
+                                // In order to send Telegram request that user pressed a button
+                                await botClient.AnswerCallbackQuery(callbackQuery.Id);
+                                try
+                                {
+                                // TODO: Change the code to better approach.
+                                StringBuilder files_list = new StringBuilder(1500);
+                                string[] directory_files = await FileHandler.GetFilesFromDirectory(YTDLP.DownloadPath);
+                                
+                                for (int i = 0; i < directory_files.Length; i++)
+                                {
+                                    files_list.Append($"{i} - ");
+                                    files_list.AppendLine(directory_files[i]);
+                                }
+                                // TODO: Remove Debug section.
+                                await botClient.SendMessage(
+                                    chat.Id,
+                                    text:   $"Files list: \n" +
+                                            $"{files_list.ToString()}" +
+                                            "Debug:\n" + 
+                                            $"Button pressed: {callbackQuery.Data}",
+                                    protectContent: false // TODO: Change this if needed.
+                                );
+                                }
+                                catch (DirectoryNotFoundException ex)
+                                {
+                                    Console.WriteLine($"Directory not found!\n"
+                                                      + $"{ex.ToString()}");
+                                }
+                                return;
+                            }
+
+                            case "button4":
+                            {
+                                // TODO: Remove text parameter.
+                                await botClient.AnswerCallbackQuery(callbackQuery.Id, "Showed downloaded file destination path!");
+                                
+                                // TODO: Remove Debug section.
+                                await botClient.SendMessage(
+                                    chat.Id,
+                                    text:   "Destination file path for downloaded files:\n" +
+                                            $"<code>{ConfigManager.Get("downloaded_files_destination")}</code>\n" +
+                                            "Debug:\n" + 
+                                            $"Button pressed: {callbackQuery.Data}",
+                                    ParseMode.Html,
+                                    protectContent: true
+                                );
+                                return;
+                            }
+
+                            /*
+                            case "button4":
+                            {
                                 // Setting showAlert to true makes a full window appear for the user.
                                 await botClient.AnswerCallbackQuery(callbackQuery.Id, "Full screen text!", showAlert: true);
 
@@ -566,6 +700,7 @@ namespace RA_BCS
 
                                 return;
                             }
+                            */
                         }
                         return;
                     }

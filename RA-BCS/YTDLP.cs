@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.StaticAssets;
 
 namespace RA_BCS
 {
@@ -30,33 +31,6 @@ namespace RA_BCS
         static YTDLP()
         {
             ytdlp_path = ConfigManager.Get("yt-dlp_path");
-            /*
-            try
-            {
-                if (!System.IO.File.Exists("ytdlp_path.txt"))
-                {
-                    Console.WriteLine("ytdlp_path.txt not found!");
-                    System.IO.File.Create("ytdlp_path.txt").Dispose(); // if file doesn't exist - create new ytdlp_path.txt file and immediatly close FileStream (otherwise file will be left open)
-                    throw new Exception("File not found. Created an empty file.");
-                    // return;
-                }
-                // TODO: Change this for settings.json later
-                ytdlp_path = Convert.ToString(System.IO.File.ReadAllText("ytdlp_path.txt")); // If file exists - grab all lines (ytdlp_path.txt should have 1 line only (token))
-                Console.WriteLine("Provied file path: {0}", ytdlp_path);
-            }
-            catch (FileNotFoundException ex)
-            {
-                Console.WriteLine("File not found!\n" + ex.ToString());
-            }
-            catch (DirectoryNotFoundException ex)
-            {
-                Console.WriteLine("Directory not found!\n" + ex.ToString());
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-            */
 
             if (ytdlp_path == "" || ytdlp_path == null)
             {
@@ -76,10 +50,7 @@ namespace RA_BCS
         /// <returns></returns>
         public async Task StartDownload(/*string ytdlp_path,*/ string url, /*string[] arguments,*/ IProgress<string> progress = null)
         {
-            // string[] args = { "1", "2" };
             Process process = new Process();
-            // int args_lenght = arguments.GetLength(0);
-            // if (arguments.GetLength(0) == 0) {}
 
             // TODO: Uncomment string[] arguments
             // Implement StringBuilder that will build all default arguments + user-defined arguments
@@ -130,6 +101,11 @@ namespace RA_BCS
         internal static string Path
         {
             get => ytdlp_path;
+        }
+
+        internal static string DownloadPath
+        {
+            get => ConfigManager.Get("yt-dlp_download_path");
         }
 
         public string GetDownloadDirectoryPath()
