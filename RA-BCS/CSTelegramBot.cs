@@ -453,9 +453,9 @@ namespace RA_BCS
                                                 text:   "Выбери клавиатуру:\n" +
                                                         "/inline (commands)\n" +
                                                         "/reply\n" +
-                                                        "Commands:" +
-                                                        "/move" +
-                                                        "Usage: <code>/move all</code> to move all files or <code>/move [numbers of files to move]</code> (use Show files in Download location command to get needed numbers)",
+                                                        "Commands:\n" +
+                                                        "/move\n" +
+                                                        "Usage: <code>/move all</code> to move all files or <code>/move [numbers of files to move]</code> (use Show files in Download location command to get needed numbers)\n",
                                                 ParseMode.Html,
                                                 protectContent: true,
                                                 replyParameters: message.MessageId
