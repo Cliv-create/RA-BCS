@@ -21,6 +21,6 @@ ____
 
 Directory containing server.exe must have "config.json" file.    
 If it doesn't exist - config.json will be created in the directory (if no config.json was found)    
-Path variables should have "\" symbols escaped properly - "\\".    
+Path variables should have '\' symbols escaped properly - '\\'.    
 
 > WARNING! DO NOT SHARE BOT TOKEN ANYWHERE!
