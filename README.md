@@ -19,8 +19,8 @@ ____
 
 ### Starting up
 
-Directory containing server.exe must have "secret.txt" and "yt_dlp_path.txt" file.    
-It should only have 1 line - bot token path to yt_dlp.exe file on your computer.    
-Path should not be in "" symbols.    
+Directory containing server.exe must have "config.json" file.    
+If it doesn't exist - config.json will be created in the directory (if no config.json was found)    
+Path variables should have "\" symbols escaped properly - "\\".    
 
 > WARNING! DO NOT SHARE BOT TOKEN ANYWHERE!
