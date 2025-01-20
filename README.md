@@ -15,6 +15,10 @@ Tools:
 2. .NET 9
 3. Telegram.Bot library (22.2.0 and above)
 
+Project is being developed using Windows operating system.    
+Everything was tested when running Windows 11 Pro.    
+Releases will be Published build for Windows operating systems (can change in the future). Linux, MacOS systems are not tested with releases.    
+
 ____
 
 ### Starting up
