@@ -6,7 +6,7 @@ This is RA-BCS (Remote Api-Based Control Server). A "student project" aimed at u
 ## About
 
 Objective: Launch YT-DLP at specified path with predefined options and URL that was provided throught API messages. - :white_check_mark:    
-Additional objectives: List files from specified folder, and move them to another folder - :black_square_button:    
+Additional objectives: List files from specified folder, and move them to another folder - :white_check_mark:    
 
 ## Building
 
