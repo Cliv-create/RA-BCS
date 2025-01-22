@@ -48,7 +48,7 @@ namespace RA_BCS
         /// <param name="url">Video URL to be downloaded.</param>
         /// <param name="progress">IProgress<string>, which will be updated with latest output from console application.</param>
         /// <returns></returns>
-        public async Task StartDownload(/*string ytdlp_path,*/ string url, /*string[] arguments,*/ IProgress<string> progress = null)
+        public async Task StartDownload(string url, string additional_arguments = "", IProgress<string> progress = null)
         {
             Process process = new Process();
 
@@ -63,6 +63,7 @@ namespace RA_BCS
                                           " --max-sleep-interval 10" + // Slepp before each download
                                           " --sleep-subtitles 5" + // Sleep before each subtitle download
                                           // "-o \"%(title)s.%(ext)s\"" + // Output name template
+                                          $" {additional_arguments}" +
                                           $" {url}"; // URL from user
             
             process.StartInfo.CreateNoWindow = true;

@@ -48,17 +48,21 @@ namespace RA_BCS
 
         // ---
 
+        // Return match after /link command
+        // (?<=\/link ).*
+        [GeneratedRegex(@"(?<=\/link ).*", RegexOptions.IgnoreCase, "en-US")]
+        private static partial Regex MatchAfterLinkCommand();
+
+        // (?<url>(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)[\w\-]{11})(?:\s+@(?<arguments>.*))?
+        [GeneratedRegex(@"(?<url>(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)[\w\-]{11})(?:\s+@(?<arguments>.*))?", RegexOptions.IgnoreCase, "en-US")]
+        private static partial Regex YoutubeVideoIDAndArgumentsRegex();
+
         // Match YoutubeID pattern
         // Link to the pattern: https://regex101.com/library/OY96XI
         // WARNING: Don't forget to switch FLAVOR setting to .NET 7.0 (C#) in order to debug and test pattern
         // YoutubeIDPattern
         [GeneratedRegex(@"(?:https?:)?(?:\/\/)?(?:[0-9A-Z-]+\.)?(?:youtu\.be\/|youtube(?:-nocookie)?\.com\S*?[^\w\s-])([\w-]{11})(?=[^\w-]|$)(?![?=&+%\w.-]*(?:['""][^<>]*>|<\/a>))[?=&+%\w.-]*", RegexOptions.IgnoreCase, "en-US")]
         private static partial Regex YoutubeVideoIDRegex();
-        
-        // Return match after /link command
-        // (?<=\/link ).*
-        [GeneratedRegex(@"(?<=\/link ).*", RegexOptions.IgnoreCase, "en-US")]
-        private static partial Regex MatchAfterLinkCommand();
 
         // Return match after /move command.
         [GeneratedRegex(@"(?<=\/move ).*", RegexOptions.IgnoreCase, "en-US")]
@@ -229,7 +233,8 @@ namespace RA_BCS
                                         // Link check
                                         if (MatchAfterLinkCommand().IsMatch(message.Text))
                                         {
-                                            if (YoutubeVideoIDRegex().IsMatch(message.Text))
+                                            Match match = YoutubeVideoIDAndArgumentsRegex().Match(message.Text);
+                                            if (match.Success)
                                             {
                                                 var sentMessage = await botClient.SendMessage(
                                                     // TODO: Delete
@@ -245,7 +250,7 @@ namespace RA_BCS
 
                                                 // 3500 symbols to minimize memory re-allocation. Change this, if the average amount of symbols in the output changed.
                                                 StringBuilder cumulative_output = new StringBuilder(3500);
-                                                
+
                                                 var progress = new Progress<string>(async (output) =>
                                                 {
                                                     try
@@ -285,9 +290,8 @@ namespace RA_BCS
                                                         );
                                                     }
                                                 });
-                                                
-                                                // Starting download, also tracking IProgress<string> changes.
-                                                await ytdlp.StartDownload(YoutubeVideoIDRegex().Match(message.Text).ToString(), progress);
+
+                                                await ytdlp.StartDownload(match.Groups["url"].Value, match.Groups["arguments"].Value, progress);
 
                                                 await botClient.SendMessage(
                                                     chat.Id,
@@ -452,10 +456,12 @@ namespace RA_BCS
                                                 chat.Id,
                                                 text:   "Выбери клавиатуру:\n" +
                                                         "/inline (commands)\n" +
-                                                        "/reply\n" +
+                                                        "/reply\n\n" +
                                                         "Commands:\n" +
+                                                        "/link\n" +
+                                                        "Usage: <code>/link [youtube_link]</code> will download the video. The video will also have predefined parameters (to see the parameters, check YTDLP class code).\nTo add additional parameters (yt-dlp's config + predefined parameters + user-gives parameters) use this command:\n<code>/link [youtube_link] @[parameters list]</code>\n\n" +
                                                         "/move\n" +
-                                                        "Usage: <code>/move all</code> to move all files or <code>/move [numbers of files to move]</code> (use Show files in Download location command to get needed numbers)\n",
+                                                        "Usage: <code>/move all</code> to move all files or <code>/move [numbers of files to move]</code> (use Show files in Download location command to get needed numbers)\n\n",
                                                 ParseMode.Html,
                                                 protectContent: true,
                                                 replyParameters: message.MessageId
@@ -481,11 +487,12 @@ namespace RA_BCS
                                                 new InlineKeyboardButton[]
                                                 {
                                                     InlineKeyboardButton.WithCallbackData("Show YTDLP path", "button2"),
-                                                    InlineKeyboardButton.WithCallbackData("Show files in Download location", "button3"),
+                                                    InlineKeyboardButton.WithCallbackData("Show downloaded files move path", "button3"),
+                                                    
                                                 },
                                                 new InlineKeyboardButton[]
                                                 {
-                                                    InlineKeyboardButton.WithCallbackData("Show downloaded files move path", "button4"),
+                                                    InlineKeyboardButton.WithCallbackData("Show files in Download location", "button4"),
                                                     InlineKeyboardButton.WithCallbackData("[TEMP]", "button5"),
                                                 },
                                             });
@@ -636,6 +643,24 @@ namespace RA_BCS
 
                             case "button3":
                             {
+                                // TODO: Remove text parameter.
+                                await botClient.AnswerCallbackQuery(callbackQuery.Id, "Showed downloaded file destination path!");
+                                
+                                // TODO: Remove Debug section.
+                                await botClient.SendMessage(
+                                    chat.Id,
+                                    text:   "Destination file path for downloaded files:\n" +
+                                            $"<code>{ConfigManager.Get("downloaded_files_destination")}</code>\n" +
+                                            "Debug:\n" + 
+                                            $"Button pressed: {callbackQuery.Data}",
+                                    ParseMode.Html,
+                                    protectContent: true
+                                );
+                                return;
+                            }
+
+                            case "button4":
+                            {
                                 // In this type of keyboard this method is mandatory.
                                 // In order to send Telegram request that user pressed a button
                                 await botClient.AnswerCallbackQuery(callbackQuery.Id);
@@ -665,24 +690,6 @@ namespace RA_BCS
                                     Console.WriteLine($"Directory not found!\n"
                                                       + $"{ex.ToString()}");
                                 }
-                                return;
-                            }
-
-                            case "button4":
-                            {
-                                // TODO: Remove text parameter.
-                                await botClient.AnswerCallbackQuery(callbackQuery.Id, "Showed downloaded file destination path!");
-                                
-                                // TODO: Remove Debug section.
-                                await botClient.SendMessage(
-                                    chat.Id,
-                                    text:   "Destination file path for downloaded files:\n" +
-                                            $"<code>{ConfigManager.Get("downloaded_files_destination")}</code>\n" +
-                                            "Debug:\n" + 
-                                            $"Button pressed: {callbackQuery.Data}",
-                                    ParseMode.Html,
-                                    protectContent: true
-                                );
                                 return;
                             }
 
