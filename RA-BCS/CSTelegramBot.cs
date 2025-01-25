@@ -196,7 +196,7 @@ namespace RA_BCS
                 chat.Id,
                 text:   $"{text}",
                 protectContent: false,
-                replyParameters: message.MessageId
+                replyParameters: message.Id
             );
             return true;
         }
@@ -242,7 +242,7 @@ namespace RA_BCS
                                                     chat.Id,
                                                     text:   "Starting download...",
                                                     protectContent: false, // Change to true if needed.
-                                                    replyParameters: message.MessageId
+                                                    replyParameters: message.Id
                                                 );
 
                                                 // YTDLP instance for download.
@@ -257,19 +257,20 @@ namespace RA_BCS
                                                     {
                                                     // Appending new output to the previous
                                                     cumulative_output.AppendLine(output);
-
+                                                    
                                                     // Updating message (cumulative output)
                                                     await botClient.EditMessageText(
                                                         chatId: sentMessage.Chat.Id,
-                                                        messageId: sentMessage.MessageId,
-                                                        text:   $"Download progress:\n{cumulative_output}"
+                                                        messageId: sentMessage.Id,
+                                                        text:   $"Download progress:\n```\n{cumulative_output}\n```",
+                                                        ParseMode.Markdown
                                                     );
 
                                                     /* Replace cumulative output to get only last update messages.
                                                     // Updating message
                                                     await botClient.EditMessageText(
                                                         chatId: sentMessage.Chat.Id,
-                                                        messageId: sentMessage.MessageId,
+                                                        messageId: sentMessage.Id,
                                                         text:   $"Download progress:\n{output}"
                                                     );
                                                     */
@@ -285,7 +286,7 @@ namespace RA_BCS
                                                         // Sending error message to the user.
                                                         await botClient.EditMessageText(
                                                             chatId: sentMessage.Chat.Id,
-                                                            messageId: sentMessage.MessageId,
+                                                            messageId: sentMessage.Id,
                                                             text:   $"Error occured!:\n{ex.ToString}"
                                                         );
                                                     }
@@ -297,7 +298,7 @@ namespace RA_BCS
                                                     chat.Id,
                                                     text:   "Download completed.",
                                                     protectContent: true,
-                                                    replyParameters: message.MessageId
+                                                    replyParameters: message.Id
                                                 );
                                             }
                                             else
@@ -306,7 +307,7 @@ namespace RA_BCS
                                                     chat.Id,
                                                     text:   "Link not found. Returning...",
                                                     protectContent: true,
-                                                    replyParameters: message.MessageId
+                                                    replyParameters: message.Id
                                                 );
                                             }
                                             return;
@@ -324,7 +325,7 @@ namespace RA_BCS
                                                     chat.Id,
                                                     text:   "Starting file move...",
                                                     protectContent: false, // Change to true if needed.
-                                                    replyParameters: message.MessageId
+                                                    replyParameters: message.Id
                                                 );
 
                                                 Console.WriteLine("Matched pattern successfully!");
@@ -358,7 +359,7 @@ namespace RA_BCS
                                                     }
                                                     await botClient.EditMessageText(
                                                         chatId: sentMessage.Chat.Id,
-                                                        messageId: sentMessage.MessageId,
+                                                        messageId: sentMessage.Id,
                                                         text:   "Moved files succeffsully!"
                                                     );
                                                 }
@@ -369,7 +370,7 @@ namespace RA_BCS
                                                     // Sending error message to the user.
                                                     await botClient.EditMessageText(
                                                         chatId: sentMessage.Chat.Id,
-                                                        messageId: sentMessage.MessageId,
+                                                        messageId: sentMessage.Id,
                                                         text:   $"Error occured! (null occured):\n{ex.ToString}"
                                                     );
                                                 }
@@ -380,7 +381,7 @@ namespace RA_BCS
                                                     // Sending error message to the user.
                                                     await botClient.EditMessageText(
                                                         chatId: sentMessage.Chat.Id,
-                                                        messageId: sentMessage.MessageId,
+                                                        messageId: sentMessage.Id,
                                                         text:   $"Error occured!:\n{ex.ToString}"
                                                     );
                                                 }
@@ -391,7 +392,7 @@ namespace RA_BCS
                                                     chat.Id,
                                                     text:   "Move command failed to parse!. Returning...",
                                                     protectContent: true,
-                                                    replyParameters: message.MessageId
+                                                    replyParameters: message.Id
                                                 );
                                             }
                                             return;
@@ -407,7 +408,7 @@ namespace RA_BCS
                                                 text:   "Привет!\n" +
                                                         "Это проект RA-BCS для удалённого управления компьютером.",
                                                 protectContent: true,
-                                                replyParameters: message.MessageId
+                                                replyParameters: message.Id
                                             );
 
                                             return;
@@ -419,7 +420,7 @@ namespace RA_BCS
                                                 chat.Id,
                                                 text: "Пока!\n",
                                                 protectContent: true,
-                                                replyParameters: message.MessageId
+                                                replyParameters: message.Id
                                             );
 
                                             return;
@@ -431,7 +432,7 @@ namespace RA_BCS
                                                 chat.Id,
                                                 text: "Пока!",
                                                 protectContent: true,
-                                                replyParameters: message.MessageId
+                                                replyParameters: message.Id
                                             );
                                             System.Environment.Exit(0);
                                             // return;
@@ -443,7 +444,7 @@ namespace RA_BCS
                                                 chat.Id,
                                                 text: "Not implemented!",
                                                 protectContent: true,
-                                                replyParameters: message.MessageId
+                                                replyParameters: message.Id
                                             );
                                             return;
                                         }
@@ -464,7 +465,7 @@ namespace RA_BCS
                                                         "Usage: <code>/move all</code> to move all files or <code>/move [numbers of files to move]</code> (use Show files in Download location command to get needed numbers)\n\n",
                                                 ParseMode.Html,
                                                 protectContent: true,
-                                                replyParameters: message.MessageId
+                                                replyParameters: message.Id
                                             );
 
                                             return;
@@ -501,7 +502,7 @@ namespace RA_BCS
                                                 chat.Id,
                                                 text: "Это inline клавиатура!",
                                                 protectContent: true,
-                                                replyParameters: message.MessageId,
+                                                replyParameters: message.Id,
                                                 replyMarkup: inlineKeyboard
                                             ); // Все клавиатуры передаются в параметр replyMarkup
 
@@ -542,7 +543,7 @@ namespace RA_BCS
                                                     chat.Id,
                                                     text: "Это reply клавиатура!",
                                                     protectContent: true,
-                                                    replyParameters: message.MessageId,
+                                                    replyParameters: message.Id,
                                                     replyMarkup: replyKeyboard
                                             ); // опять передаем клавиатуру в параметр replyMarkup
 
@@ -561,7 +562,7 @@ namespace RA_BCS
                                         chat.Id,
                                         text: "Command not recognized!",
                                         protectContent: true,
-                                        replyParameters: message.MessageId
+                                        replyParameters: message.Id
                                     );
                                     return;
                                 }
@@ -572,7 +573,7 @@ namespace RA_BCS
                                 chat.Id,
                                 text: "", // Sending text
                                 protectContent: true, // Will message be copy-able, or not
-                                replyParameters: message.MessageId // Reply to sent message
+                                replyParameters: message.Id // Reply to sent message
                             );
                             */
                         }
